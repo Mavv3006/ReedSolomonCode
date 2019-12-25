@@ -1,45 +1,47 @@
 package Value;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MyValue {
-
-    private List<Double> myValue;
+    public static MyValue ZERO = new MyValue(0);
+    public static MyValue ONE = new MyValue(1);
+    private Double myValue;
 
     public MyValue(double value) {
-        myValue = new ArrayList<>();
-        myValue.add(value);
+        myValue = value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MyValue) {
+            return ((MyValue) obj).getValue() == this.getValue();
+        } else return false;
     }
 
     public double getValue() {
-        return myValue.get(0);
+        return myValue;
     }
 
-    public void setValue(double value) {
-        this.myValue.set(0, value);
+    public void setValue(double newValue) {
+        this.myValue = newValue;
     }
 
-    public MyValue div(MyValue divisor) throws ArithmeticException {
+    public void divideBy(MyValue divisor) throws ArithmeticException {
         double div = divisor.getValue();
         if (div == 0) {
             throw new ArithmeticException("Division by Zero");
         }
         this.setValue(this.getValue() / div);
-        return this;
     }
 
-    public MyValue sub(MyValue value) {
+    public void subtract(MyValue value) {
         this.setValue(this.getValue() - value.getValue());
-        return this;
     }
 
     @Override
     public String toString() {
-        return myValue.toString() ;
+        return myValue.toString();
     }
 
-    public MyValue copy(){
+    public MyValue copy() {
         return new MyValue(this.getValue());
     }
 }

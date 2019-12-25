@@ -7,70 +7,80 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GLS {
-    private MyValue[][] gls;
+    private MyValue[][] glsToSolve;
     private MyValue[] result;
 
-    public GLS(MyValue[][] gls) {
-        this.gls = gls;
+    public GLS(MyValue[][] glsToSolve) {
+        this.glsToSolve = glsToSolve;
     }
 
     public int rowCount() {
-        return gls.length;
+        return glsToSolve.length;
     }
 
-    public int rowLength() throws Exception {
+    public int columnCount() throws Exception {
         if (checkGLS_lengthOfRow()) {
-            return gls[0].length;
+            return glsToSolve[0].length;
         } else {
             throw new Exception("All rows have to be the same length");
         }
     }
 
-    public boolean solve() {
-//        if (!checkGLS()) return false;
-
-        // Turn first values of all rows to 1
-        return true;
+    public void solve() {
+        int startIndex = 0;
+        upperTriangularMatrix(startIndex);
+        resolveMatrix();
     }
 
-    /**
-     * Reduces the Values in the first Column to One and divides
-     * all other Values through the old Value in Columnn One
-     *
-     * @return {@code MyValue[][]}
-     */
-    private MyValue[][] reduceToOne(MyValue[][] gls) {
-        for (MyValue[] row : gls) {
-            int i = 0;
-            if (i < row.length - 1) {
-                do {
-                    try {
-                        MyValue value = row[i].copy();
-                        for (int j = 0; j < row.length; j++) {
-                            row[j] = row[j].div(value);
-                        }
-                        break;
-                    } catch (ArithmeticException ignored) {
-                    }
-                    i++;
-                } while (i < row.length - 1);
+    private void resolveMatrix() {
+        // zeilenanzahl + 1 == spaltenanzahl => es kann eine Möglichkeit geben
+        // zeilenanzahl + 1 < spaltenzahl => es gibt ein F.S. als Lösung
+        // zeilenanzahl + 1 > spaltenzahl => es kann eine Möglichkeit geben, wenn es zeilenanzahl - 1 Nullzeilen gibt
+        // => letzen beiden Möglichkeiten lasse ich erstmal außen vor
+        int columnAmount = glsToSolve[0].length;
+        int resultColumnIndex = glsToSolve[0].length - 1;
+        if (glsToSolve.length + 1 == glsToSolve[0].length) {
+            MyValue[] temporaryResultList = new MyValue[columnAmount - 1];
+            for (int rowCount = glsToSolve.length - 1; rowCount >= 0; rowCount--) {
+                // TODO: solve this issue
             }
+            result = temporaryResultList;
         }
-        return gls;
     }
 
-    public boolean zeilenStufenForm(int startIndex, MyValue[][] gls) {
-        MyValue[][] reduced_gls = reduceToOne(gls);
-        MyValue[] row1 = gls[startIndex];
+    private void reduceFirstColumnToOne(int currentIndex) {
+        for (MyValue[] activeRow : glsToSolve) {
+            MyValue valueInTheFirstColumn = activeRow[currentIndex].copy();
+            if (valueInTheFirstColumn.equals(MyValue.ZERO) || valueInTheFirstColumn.equals(MyValue.ONE)) continue;
 
-        for (int i = startIndex + 1; i < gls.length; i++) {
-            MyValue[] other_row = gls[i];
-            // Subtract from other row the first one
-            for (int j = 0; j < row1.length; j++) {
-                other_row[j].sub(row1[j]);
+            for (int columnCount = currentIndex; columnCount < activeRow.length; columnCount++) {
+                try {
+                    activeRow[columnCount].divideBy(valueInTheFirstColumn);
+                } catch (ArithmeticException ignored) {
+                }
             }
         }
-        return true;
+    }
+
+    public MyValue[][] getGlsToSolve() {
+        return glsToSolve;
+    }
+
+    public void upperTriangularMatrix(int currentIndex) {
+        if (currentIndex + 1 == glsToSolve.length || currentIndex + 1 == glsToSolve[0].length) return;
+
+        reduceFirstColumnToOne(currentIndex);
+        MyValue[] firstRow = glsToSolve[currentIndex];
+
+        for (int rowCount = currentIndex + 1; rowCount < glsToSolve.length; rowCount++) {
+            MyValue[] otherRow = glsToSolve[rowCount];
+            if (otherRow[currentIndex].equals(MyValue.ZERO)) continue;
+            for (int columnCount = currentIndex; columnCount < firstRow.length; columnCount++) {
+                otherRow[columnCount].subtract(firstRow[columnCount]);
+            }
+        }
+
+        upperTriangularMatrix(currentIndex + 1);
     }
 
     public MyValue[] getResult() {
@@ -85,7 +95,7 @@ public class GLS {
     public boolean checkGLS() {
         try {
             int rowCount = this.rowCount();
-            int rowLength = this.rowLength();
+            int rowLength = this.columnCount();
             return rowCount + 1 == rowLength;
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,8 +110,8 @@ public class GLS {
      */
     public boolean checkGLS_lengthOfRow() {
         List<Integer> length = new ArrayList<>();
-        for (int i = 0, glsSize = gls.length; i < glsSize; i++) {
-            length.add(i, gls[i].length);
+        for (int i = 0, glsSize = glsToSolve.length; i < glsSize; i++) {
+            length.add(i, glsToSolve[i].length);
         }
         Integer firstElement = length.get(0);
         for (int i = 0; i < length.size(); i++) {
@@ -125,8 +135,8 @@ public class GLS {
      */
     public boolean checkGLS_forNullRow() {
         try {
-            MyValue[] nullRow = new MyValue[this.rowLength()];
-            for (int i = 0; i < this.rowLength(); i++) {
+            MyValue[] nullRow = new MyValue[this.columnCount()];
+            for (int i = 0; i < this.columnCount(); i++) {
                 nullRow[i] = new MyValue(0);
             }
             System.out.println("nullRow: " + Arrays.toString(nullRow));

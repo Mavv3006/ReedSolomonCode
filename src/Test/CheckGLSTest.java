@@ -3,6 +3,8 @@ package Test;
 import Gleichungssystem.GLS;
 import Value.MyValue;
 
+import java.util.Arrays;
+
 class CheckGLSTest {
     GLS gls;
     MyValue[][] list;
@@ -34,7 +36,16 @@ class CheckGLSTest {
     }
 
     @org.junit.jupiter.api.Test
-    void testZeilenStufenForm() {
-        assert gls.zeilenStufenForm(0, list) : true;
+    void testUpperTriangularMatrix() {
+        gls.upperTriangularMatrix(0);
+        assert gls.getGlsToSolve()[0][list.length - 1].equals(MyValue.ONE) : true;
+        assert gls.getGlsToSolve()[2][2].equals(MyValue.ZERO) : true;
+    }
+
+    @org.junit.jupiter.api.Test
+    void testNoResult() {
+        gls.solve();
+        System.out.println(Arrays.toString(gls.getResult()));
+        assert gls.getResult() == null : true;
     }
 }
