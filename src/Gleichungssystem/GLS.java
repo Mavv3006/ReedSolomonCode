@@ -2,54 +2,78 @@ package Gleichungssystem;
 
 import Value.MyValue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class GLS {
+    private final boolean isCorrectGLS;
     private MyValue[][] glsToSolve;
     private MyValue[] result;
+    private boolean isSolvable = true;
 
     public GLS(MyValue[][] glsToSolve) {
         this.glsToSolve = glsToSolve;
+        isCorrectGLS = checkGLS_lengthOfRow();
+        if (!isCorrectGLS) isSolvable = false;
     }
 
-    public int rowCount() {
+    /**
+     * @return true if and only if every row in the GLS has the same amount of columns. Which means every row has the same length
+     */
+    public boolean isSolvable() {
+        return isSolvable;
+    }
+
+    /**
+     * @return The amount of rows in the GLS
+     */
+    int rowCount() {
         return glsToSolve.length;
     }
 
-    public int columnCount() throws Exception {
-        if (checkGLS_lengthOfRow()) {
+    /**
+     * @return The amount of variables in the GLS
+     * @throws Exception If the GLS is not correct. Which means that all rows don't have the same length
+     */
+    int variableCount() throws Exception {
+        return columnCount() - 1;
+    }
+
+    /**
+     * @return The amount of columns in the GLS
+     * @throws Exception If the GLS is not correct. Which means that all rows don't have the same length
+     */
+    int columnCount() throws Exception {
+        if (isCorrectGLS) {
             return glsToSolve[0].length;
         } else {
             throw new Exception("All rows have to be the same length");
         }
     }
 
-    public void solve() {
+    /**
+     * If this method returns without any Exception than the GLS has one unique solution
+     *
+     * @throws UnsolvableGLSException         If the GLS does not have a solution
+     * @throws NoDistinctGLSSolutionException If the GLS has more than one solution
+     */
+    public void solve() throws UnsolvableGLSException, NoDistinctGLSSolutionException {
         int startIndex = 0;
         upperTriangularMatrix(startIndex);
+        checkGLS_forNullRow();
         resolveMatrix();
     }
 
-    private void resolveMatrix() {
+    void resolveMatrix() {
         // zeilenanzahl + 1 == spaltenanzahl => es kann eine Möglichkeit geben
         // zeilenanzahl + 1 < spaltenzahl => es gibt ein F.S. als Lösung
         // zeilenanzahl + 1 > spaltenzahl => es kann eine Möglichkeit geben, wenn es zeilenanzahl - 1 Nullzeilen gibt
         // => letzen beiden Möglichkeiten lasse ich erstmal außen vor
-        int columnAmount = glsToSolve[0].length;
-        int resultColumnIndex = glsToSolve[0].length - 1;
-        if (glsToSolve.length + 1 == glsToSolve[0].length) {
-            MyValue[] temporaryResultList = new MyValue[columnAmount - 1];
-            for (int rowCount = glsToSolve.length - 1; rowCount >= 0; rowCount--) {
-                // TODO: solve this issue
-            }
-            result = temporaryResultList;
-        }
+
     }
 
-    private void reduceFirstColumnToOne(int currentIndex) {
-        for (MyValue[] activeRow : glsToSolve) {
+    void reduceFirstColumnToOne(int currentIndex) {
+        for (int i = currentIndex; i < glsToSolve.length; i++) {
+            MyValue[] activeRow = glsToSolve[i];
             MyValue valueInTheFirstColumn = activeRow[currentIndex].copy();
             if (valueInTheFirstColumn.equals(MyValue.ZERO) || valueInTheFirstColumn.equals(MyValue.ONE)) continue;
 
@@ -62,14 +86,15 @@ public class GLS {
         }
     }
 
-    public MyValue[][] getGlsToSolve() {
+    MyValue[][] getGlsToSolve() {
         return glsToSolve;
     }
 
-    public void upperTriangularMatrix(int currentIndex) {
+    void upperTriangularMatrix(int currentIndex) {
+        reduceFirstColumnToOne(currentIndex);
+
         if (currentIndex + 1 == glsToSolve.length || currentIndex + 1 == glsToSolve[0].length) return;
 
-        reduceFirstColumnToOne(currentIndex);
         MyValue[] firstRow = glsToSolve[currentIndex];
 
         for (int rowCount = currentIndex + 1; rowCount < glsToSolve.length; rowCount++) {
@@ -84,23 +109,8 @@ public class GLS {
     }
 
     public MyValue[] getResult() {
-        return result;
-    }
-
-    /**
-     * Checks whether a List of Lists of Numbers are a valid GLS:<br>
-     * - all rows have the same length<br>
-     * - {@code rowCount + 1 = rowLength}
-     */
-    public boolean checkGLS() {
-        try {
-            int rowCount = this.rowCount();
-            int rowLength = this.columnCount();
-            return rowCount + 1 == rowLength;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        if (isSolvable) return result;
+        else return new MyValue[]{};
     }
 
     /**
@@ -108,23 +118,15 @@ public class GLS {
      *
      * @return {@code true} if all the rows have the same length
      */
-    public boolean checkGLS_lengthOfRow() {
-        List<Integer> length = new ArrayList<>();
-        for (int i = 0, glsSize = glsToSolve.length; i < glsSize; i++) {
-            length.add(i, glsToSolve[i].length);
-        }
-        Integer firstElement = length.get(0);
-        for (int i = 0; i < length.size(); i++) {
-            Integer e = length.get(i);
-            e -= firstElement;
-            length.remove(i);
-            length.add(i, e);
-        }
-        for (Integer e : length) {
-            if (e != 0) {
+    boolean checkGLS_lengthOfRow() {
+        int lengthOfFirstRow = glsToSolve[0].length;
+        int columnIndex = 1;
+        do {
+            if (glsToSolve[columnIndex].length != lengthOfFirstRow) {
                 return false;
             }
-        }
+            columnIndex++;
+        } while (columnIndex < glsToSolve.length);
         return true;
     }
 
@@ -133,7 +135,7 @@ public class GLS {
      *
      * @return {@code true} if none of the rows contain a row of {@code 0}-s
      */
-    public boolean checkGLS_forNullRow() {
+    boolean checkGLS_forNullRow() {
         try {
             MyValue[] nullRow = new MyValue[this.columnCount()];
             for (int i = 0; i < this.columnCount(); i++) {
