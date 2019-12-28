@@ -16,6 +16,11 @@ public class GLS {
         isSolvable = isCorrectGLS;
     }
 
+    @Override
+    public String toString() {
+        return Arrays.deepToString(glsToSolve);
+    }
+
     /**
      * @return true if and only if every row in the GLS has the same amount of columns. Which means every row has the same length
      */
@@ -53,10 +58,11 @@ public class GLS {
     /**
      * If this method returns without any Exception than the GLS has one unique solution
      *
-     * @throws UnsolvableGLSException         If the GLS does not have a solution
-     * @throws NoDistinctGLSSolutionException If the GLS has more than one solution
+     * @throws UnsolvableGLSException If the GLS does not have a solution
      */
-    public void solve() throws UnsolvableGLSException, NoDistinctGLSSolutionException {
+    /* @throws NoDistinctGLSSolutionException If the GLS has more than one solution
+     */
+    public void solve() throws UnsolvableGLSException /*, NoDistinctGLSSolutionException*/ {
         int startIndex = 0;
         upperTriangularMatrix(startIndex);
         resolveMatrix();
@@ -83,7 +89,7 @@ public class GLS {
             MyValue currentRecursiveValue = MyValue.multiply(glsToSolve[currentVariableIndex - 1][currentVariableIndex + i], nextVariableValue);
             recursiveValue.add(currentRecursiveValue);
         }
-        MyValue nextValue = glsToSolve[currentVariableIndex][columnCount() - 1].copy();
+        MyValue nextValue = glsToSolve[currentVariableIndex - 1][columnCount() - 1].copy();
         nextValue.subtract(recursiveValue);
         result[currentVariableIndex - 1] = nextValue;
         resolveRecursively(currentVariableIndex - 1);
