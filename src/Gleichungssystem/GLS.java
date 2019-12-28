@@ -1,17 +1,20 @@
 package Gleichungssystem;
 
+import Value.Field;
 import Value.MyValue;
 
 import java.util.Arrays;
 
 public class GLS {
     private final boolean isCorrectGLS;
-    private MyValue[][] glsToSolve;
-    private MyValue[] result;
+    private Field[][] glsToSolve;
+    private Field[] result;
+    private boolean isSolved;
 
-    public GLS(MyValue[][] glsToSolve) {
+    public GLS(Field[][] glsToSolve) {
         this.glsToSolve = glsToSolve;
         isCorrectGLS = checkGLS_lengthOfRow();
+        isSolved = false;
     }
 
     @Override
@@ -54,7 +57,8 @@ public class GLS {
      */
     private int nullRowCount() throws UnsolvableGLSException {
         int nullRowCounter = 0;
-        MyValue[] nullRow = MyValue.getNullRow(this.columnCount());
+
+        Field[] nullRow = new MyValue().getNullRow(this.columnCount());
 
         for (int i = 0; i < rowCount(); i++) {
             if (Arrays.equals(glsToSolve[i], nullRow)) {
@@ -75,6 +79,8 @@ public class GLS {
         resolveMatrix();
         if (result.length + nullRowCount() < rowCount()) {
             throw new UnsolvableGLSException();
+        } else {
+            isSolved = true;
         }
     }
 
@@ -88,14 +94,14 @@ public class GLS {
 
     void resolveRecursively(int currentVariableIndex) throws UnsolvableGLSException {
         if (currentVariableIndex == 0) return;
-        MyValue recursiveValue = new MyValue();
+        Field recursiveValue = new MyValue();
         final int totalVariableAmount = this.totalVariableAmount();
         for (int i = 0; i < totalVariableAmount - currentVariableIndex; i++) {
-            MyValue nextVariableValue = result[currentVariableIndex + i];
-            MyValue currentRecursiveValue = MyValue.multiply(glsToSolve[currentVariableIndex - 1][currentVariableIndex + i], nextVariableValue);
-            recursiveValue.add(currentRecursiveValue);
+            Field nextVariableValue = result[currentVariableIndex + i].copy();
+            nextVariableValue.multiply(glsToSolve[currentVariableIndex - 1][currentVariableIndex + i]);
+            recursiveValue.add(nextVariableValue);
         }
-        MyValue nextValue = glsToSolve[currentVariableIndex - 1][columnCount() - 1].copy();
+        Field nextValue = glsToSolve[currentVariableIndex - 1][columnCount() - 1].copy();
         nextValue.subtract(recursiveValue);
         result[currentVariableIndex - 1] = nextValue;
         resolveRecursively(currentVariableIndex - 1);
@@ -103,20 +109,20 @@ public class GLS {
 
     void reduceFirstColumnToOne(int currentIndex) {
         for (int i = currentIndex; i < glsToSolve.length; i++) {
-            MyValue[] activeRow = glsToSolve[i];
-            MyValue valueInTheFirstColumn = activeRow[currentIndex].copy();
+            Field[] activeRow = glsToSolve[i];
+            Field valueInTheFirstColumn = activeRow[currentIndex].copy();
             if (valueInTheFirstColumn.equals(MyValue.ZERO) || valueInTheFirstColumn.equals(MyValue.ONE)) continue;
 
             for (int columnCount = currentIndex; columnCount < activeRow.length; columnCount++) {
                 try {
-                    activeRow[columnCount].divideBy(valueInTheFirstColumn);
+                    activeRow[columnCount].divide(valueInTheFirstColumn);
                 } catch (ArithmeticException ignored) {
                 }
             }
         }
     }
 
-    MyValue[][] getGlsToSolve() {
+    Field[][] getGlsToSolve() {
         return glsToSolve;
     }
 
@@ -125,10 +131,10 @@ public class GLS {
 
         if (currentIndex + 1 == glsToSolve.length || currentIndex + 1 == glsToSolve[0].length) return;
 
-        MyValue[] firstRow = glsToSolve[currentIndex];
+        Field[] firstRow = glsToSolve[currentIndex];
 
         for (int rowCount = currentIndex + 1; rowCount < glsToSolve.length; rowCount++) {
-            MyValue[] otherRow = glsToSolve[rowCount];
+            Field[] otherRow = glsToSolve[rowCount];
             if (otherRow[currentIndex].equals(MyValue.ZERO)) continue;
             for (int columnCount = currentIndex; columnCount < firstRow.length; columnCount++) {
                 otherRow[columnCount].subtract(firstRow[columnCount]);
@@ -138,9 +144,12 @@ public class GLS {
         upperTriangularMatrix(currentIndex + 1);
     }
 
-    public MyValue[] getResult() {
-        if (isCorrectGLS) return result;
-        else return new MyValue[]{};
+    /**
+     * @throws UnsolvedGLSException Iff the GLS isn't solved
+     */
+    public Field[] getResult() throws UnsolvedGLSException {
+        if (isSolved) return result;
+        throw new UnsolvedGLSException();
     }
 
     /**

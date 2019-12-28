@@ -2,7 +2,7 @@ package Value;
 
 import java.util.Arrays;
 
-public class MyValue {
+public class MyValue implements Field {
     public static MyValue ZERO = new MyValue(0);
     public static MyValue ONE = new MyValue(1);
     private Double myValue;
@@ -15,11 +15,8 @@ public class MyValue {
         myValue = 0.0;
     }
 
-    public static MyValue multiply(MyValue value1, MyValue value2) {
-        return new MyValue(value1.getValue() * value2.getValue());
-    }
-
-    public static MyValue[] getNullRow(int lengthOfRow) {
+    @Override
+    public MyValue[] getNullRow(int lengthOfRow) {
         MyValue[] nullRow = new MyValue[lengthOfRow];
         Arrays.setAll(nullRow, v -> new MyValue());
         return nullRow;
@@ -32,15 +29,18 @@ public class MyValue {
         } else return false;
     }
 
+    @Override
     public double getValue() {
         return myValue;
     }
 
+    @Override
     public void setValue(double newValue) {
         this.myValue = newValue;
     }
 
-    public void divideBy(MyValue divisor) throws ArithmeticException {
+    @Override
+    public void divide(Field divisor) throws ArithmeticException {
         double div = divisor.getValue();
         if (div == 0) {
             throw new ArithmeticException("Division by Zero");
@@ -48,12 +48,19 @@ public class MyValue {
         this.setValue(this.getValue() / div);
     }
 
-    public void add(MyValue value) {
-        this.setValue(this.getValue() + value.getValue());
+    @Override
+    public void multiply(Field factor) {
+        this.setValue(this.getValue() * factor.getValue());
     }
 
-    public void subtract(MyValue value) {
-        this.setValue(this.getValue() - value.getValue());
+    @Override
+    public void add(Field summand) {
+        this.setValue(this.getValue() + summand.getValue());
+    }
+
+    @Override
+    public void subtract(Field subtrahend) {
+        this.setValue(this.getValue() - subtrahend.getValue());
     }
 
     @Override
@@ -61,6 +68,7 @@ public class MyValue {
         return myValue.toString();
     }
 
+    @Override
     public MyValue copy() {
         return new MyValue(this.getValue());
     }

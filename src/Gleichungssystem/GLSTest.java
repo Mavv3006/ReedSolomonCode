@@ -54,7 +54,7 @@ class GLSTest {
             System.out.println("GLS: " + threeByThree);
             System.out.println("Result: " + Arrays.toString(threeByThree.getResult()));
 
-        } catch (UnsolvableGLSException e) {
+        } catch (UnsolvableGLSException | UnsolvedGLSException e) {
             e.printStackTrace();
             fail();
         }
@@ -75,7 +75,7 @@ class GLSTest {
             gls.solve();
             assert gls.getResult()[0].getValue() == 11.5 : true;
             assert gls.getResult().length == 2 : true;
-        } catch (UnsolvableGLSException e) {
+        } catch (UnsolvableGLSException | UnsolvedGLSException e) {
             e.printStackTrace();
             fail();
         }
