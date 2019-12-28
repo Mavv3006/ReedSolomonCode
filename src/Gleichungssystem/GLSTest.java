@@ -43,11 +43,6 @@ class GLSTest {
         assert gls.isSolvable() : true;
     }
 
-//    @Test
-//    void checkGLS_forNullRow() {
-//        assert gls.checkGLS_forNullRow() : true;
-//    }
-
     @Test
     void solve() {
         try {
