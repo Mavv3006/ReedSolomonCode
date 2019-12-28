@@ -6,64 +6,78 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 class GLSTest {
 
-    GLS gls1;
-    GLS gls2;
-    MyValue[][] list;
+    GLS twoByTwo;
+    GLS threeByThree;
 
     @BeforeEach
     void setUp() {
-        list = new MyValue[][]{
+        MyValue[][] myValueArray;
+
+        myValueArray = new MyValue[][]{
                 {new MyValue(4), new MyValue(2), new MyValue(5)},
                 {new MyValue(3), new MyValue(0), new MyValue(7)}
         };
-        gls1 = new GLS(list);
+        twoByTwo = new GLS(myValueArray);
 
-        list = new MyValue[][]{
+        myValueArray = new MyValue[][]{
                 {new MyValue(3), new MyValue(3), new MyValue(3), new MyValue(3)},
                 {new MyValue(4), new MyValue(4), new MyValue(4), new MyValue(4)},
                 {new MyValue(5), new MyValue(5), new MyValue(5), new MyValue(5)},
         };
-        gls2 = new GLS(list);
-
+        threeByThree = new GLS(myValueArray);
     }
 
     @Test
     void upperTriangularMatrix() {
-        gls1.upperTriangularMatrix(0);
-        assert gls1.getGlsToSolve()[0][0].equals(MyValue.ONE) : true;
-        assert gls1.getGlsToSolve()[1][1].equals(MyValue.ONE) : true;
+        twoByTwo.upperTriangularMatrix(0);
+        assert twoByTwo.getGlsToSolve()[0][0].equals(MyValue.ONE) : true;
+        assert twoByTwo.getGlsToSolve()[1][1].equals(MyValue.ONE) : true;
     }
 
     @Test
     void checkGLS_lengthOfRow() {
-        assert gls1.checkGLS_lengthOfRow() : true;
-    }
-
-    @Test
-    void isSolvable() {
-        GLS testGLS = new GLS(new MyValue[][]{
-                {new MyValue(2), new MyValue(4), new MyValue(6)},
-                {new MyValue(4)}
-        });
-        assert !testGLS.isSolvable() : true;
-        assert gls1.isSolvable() : true;
+        assert twoByTwo.checkGLS_lengthOfRow() : true;
     }
 
     @Test
     void solve() {
         try {
-            gls1.solve();
-            System.out.println("GLS: " + gls1);
-            System.out.println("Result: " + Arrays.toString(gls1.getResult()));
+            twoByTwo.solve();
+            System.out.println("GLS: " + twoByTwo);
+            System.out.println("Result: " + Arrays.toString(twoByTwo.getResult()));
             System.out.println();
-            gls2.solve();
-            System.out.println("GLS: " + gls2);
-            System.out.println("Result: " + Arrays.toString(gls2.getResult()));
+            threeByThree.solve();
+            System.out.println("GLS: " + threeByThree);
+            System.out.println("Result: " + Arrays.toString(threeByThree.getResult()));
 
-        } catch (UnsolvableGLSException /*| NoDistinctGLSSolutionException*/ e) {
+        } catch (UnsolvableGLSException e) {
             e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    void testOtherMatrixDimensions() {
+        MyValue[][] list = new MyValue[][]{
+                {new MyValue(1), new MyValue(1), new MyValue(7)},
+                {new MyValue(3), new MyValue(5), new MyValue(12)},
+                {new MyValue(9), new MyValue(15), new MyValue(36)},
+                {new MyValue(6), new MyValue(10), new MyValue(24)}
+        };
+
+        GLS gls = new GLS(list);
+
+        try {
+            gls.solve();
+            assert gls.getResult()[0].getValue() == 11.5 : true;
+            assert gls.getResult().length == 2 : true;
+        } catch (UnsolvableGLSException e) {
+            e.printStackTrace();
+            fail();
         }
     }
 }

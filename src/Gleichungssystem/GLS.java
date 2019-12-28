@@ -8,24 +8,15 @@ public class GLS {
     private final boolean isCorrectGLS;
     private MyValue[][] glsToSolve;
     private MyValue[] result;
-    private boolean isSolvable;
 
     public GLS(MyValue[][] glsToSolve) {
         this.glsToSolve = glsToSolve;
         isCorrectGLS = checkGLS_lengthOfRow();
-        isSolvable = isCorrectGLS;
     }
 
     @Override
     public String toString() {
         return Arrays.deepToString(glsToSolve);
-    }
-
-    /**
-     * @return true if and only if every row in the GLS has the same amount of columns. Which means every row has the same length
-     */
-    public boolean isSolvable() {
-        return isSolvable;
     }
 
     /**
@@ -56,23 +47,38 @@ public class GLS {
     }
 
     /**
+     * Counts how many rows in the GLS have only {@code 0}-s in it
+     *
+     * @return The amount of rows which contains only {@code 0}-s
+     * @throws UnsolvableGLSException Iff the GLS is not correct. Which means that all rows don't have the same length
+     */
+    private int nullRowCount() throws UnsolvableGLSException {
+        int nullRowCounter = 0;
+        MyValue[] nullRow = MyValue.getNullRow(this.columnCount());
+
+        for (int i = 0; i < rowCount(); i++) {
+            if (Arrays.equals(glsToSolve[i], nullRow)) {
+                nullRowCounter++;
+            }
+        }
+        return nullRowCounter;
+    }
+
+    /**
      * If this method returns without any Exception than the GLS has one unique solution
      *
      * @throws UnsolvableGLSException If the GLS does not have a solution
      */
-    /* @throws NoDistinctGLSSolutionException If the GLS has more than one solution
-     */
-    public void solve() throws UnsolvableGLSException /*, NoDistinctGLSSolutionException*/ {
+    public void solve() throws UnsolvableGLSException {
         int startIndex = 0;
         upperTriangularMatrix(startIndex);
         resolveMatrix();
+        if (result.length + nullRowCount() < rowCount()) {
+            throw new UnsolvableGLSException();
+        }
     }
 
     void resolveMatrix() throws UnsolvableGLSException {
-        // zeilenanzahl + 1 == spaltenanzahl => es kann eine Möglichkeit geben
-        // zeilenanzahl + 1 < spaltenzahl => es gibt ein F.S. als Lösung
-        // zeilenanzahl + 1 > spaltenzahl => es kann eine Möglichkeit geben, wenn es zeilenanzahl - 1 Nullzeilen gibt
-        // => letzen beiden Möglichkeiten lasse ich erstmal außen vor
         final int totalVariableAmount = totalVariableAmount();
         result = new MyValue[totalVariableAmount];
         Arrays.setAll(result, v -> new MyValue());
@@ -133,7 +139,7 @@ public class GLS {
     }
 
     public MyValue[] getResult() {
-        if (isSolvable) return result;
+        if (isCorrectGLS) return result;
         else return new MyValue[]{};
     }
 
@@ -153,23 +159,4 @@ public class GLS {
         } while (columnIndex < glsToSolve.length);
         return true;
     }
-
-//    /**
-//     * Checks the GLS whether at least one row contains only {@code 0}-s
-//     *
-//     * @return {@code true} if none of the rows contain a row of {@code 0}-s
-//     */
-//    boolean checkGLS_forNullRow() {
-//        try {
-//            MyValue[] nullRow = new MyValue[this.columnCount()];
-//            for (int i = 0; i < this.columnCount(); i++) {
-//                nullRow[i] = new MyValue();
-//            }
-//
-//            return true;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//    }
 }

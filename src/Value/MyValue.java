@@ -1,5 +1,7 @@
 package Value;
 
+import java.util.Arrays;
+
 public class MyValue {
     public static MyValue ZERO = new MyValue(0);
     public static MyValue ONE = new MyValue(1);
@@ -15,6 +17,12 @@ public class MyValue {
 
     public static MyValue multiply(MyValue value1, MyValue value2) {
         return new MyValue(value1.getValue() * value2.getValue());
+    }
+
+    public static MyValue[] getNullRow(int lengthOfRow) {
+        MyValue[] nullRow = new MyValue[lengthOfRow];
+        Arrays.setAll(nullRow, v -> new MyValue());
+        return nullRow;
     }
 
     @Override
