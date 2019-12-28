@@ -4,6 +4,8 @@ import Value.MyValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 class GLSTest {
 
     GLS gls;
@@ -41,13 +43,18 @@ class GLSTest {
         assert gls.isSolvable() : true;
     }
 
-    @Test
-    void checkGLS_forNullRow() {
-        assert gls.checkGLS_forNullRow() : true;
-    }
+//    @Test
+//    void checkGLS_forNullRow() {
+//        assert gls.checkGLS_forNullRow() : true;
+//    }
 
     @Test
     void solve() {
-        // TODO write test
+        try {
+            gls.solve();
+            System.out.println(Arrays.toString(gls.getResult()));
+        } catch (UnsolvableGLSException | NoDistinctGLSSolutionException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -9,6 +9,14 @@ public class MyValue {
         myValue = value;
     }
 
+    public MyValue() {
+        myValue = 0.0;
+    }
+
+    public static MyValue multiply(MyValue value1, MyValue value2) {
+        return new MyValue(value1.getValue() * value2.getValue());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof MyValue) {
@@ -30,6 +38,10 @@ public class MyValue {
             throw new ArithmeticException("Division by Zero");
         }
         this.setValue(this.getValue() / div);
+    }
+
+    public void add(MyValue value) {
+        this.setValue(this.getValue() + value.getValue());
     }
 
     public void subtract(MyValue value) {
