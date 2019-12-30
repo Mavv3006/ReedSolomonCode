@@ -2,31 +2,19 @@ package Value;
 
 import java.util.Arrays;
 
-public class MyValue implements Field {
-    public static MyValue ZERO = new MyValue(0);
-    public static MyValue ONE = new MyValue(1);
-    private Double myValue;
+public class RealNumbers extends Field {
+    public static Field ZERO = new RealNumbers(0);
+    public static Field ONE = new RealNumbers(1);
 
-    public MyValue(double value) {
+    public RealNumbers(double value) {
         myValue = value;
     }
 
-    public MyValue() {
-        myValue = 0.0;
-    }
-
     @Override
-    public MyValue[] getNullRow(int lengthOfRow) {
-        MyValue[] nullRow = new MyValue[lengthOfRow];
-        Arrays.setAll(nullRow, v -> new MyValue());
+    public RealNumbers[] getNullRow(int lengthOfRow) {
+        RealNumbers[] nullRow = new RealNumbers[lengthOfRow];
+        Arrays.setAll(nullRow, v -> new RealNumbers(0));
         return nullRow;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof MyValue) {
-            return ((MyValue) obj).getValue() == this.getValue();
-        } else return false;
     }
 
     @Override
@@ -66,10 +54,5 @@ public class MyValue implements Field {
     @Override
     public String toString() {
         return myValue.toString();
-    }
-
-    @Override
-    public MyValue copy() {
-        return new MyValue(this.getValue());
     }
 }
