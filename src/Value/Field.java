@@ -1,20 +1,46 @@
 package Value;
 
-public interface Field {
+import java.util.Arrays;
 
-    Field[] getNullRow(int lengthOfRow);
+public abstract class Field implements Cloneable {
+    Double myValue;
 
-    double getValue();
+    public Field[] getNullRow(int lengthOfRow) {
+        Field[] fields = new Field[lengthOfRow];
+        Arrays.setAll(fields, v -> {
+            Field value = this.clone();
+            value.setValue(0);
+            return value;
+        });
+        return fields;
+    }
 
-    void setValue(double newValue);
+    public abstract double getValue();
 
-    Field copy();
+    public abstract void setValue(double newValue);
 
-    void subtract(Field subtrahend);
+    public Field clone() {
+        Field field = null;
+        try {
+            field = (Field) super.clone();
+        } catch (CloneNotSupportedException ignored) {
+            // will never happen
+        }
+        return field;
+    }
 
-    void add(Field summand);
+    public abstract void subtract(Field subtrahend);
 
-    void divide(Field divisor);
+    public abstract void add(Field summand);
 
-    void multiply(Field factor);
+    public abstract void divide(Field divisor);
+
+    public abstract void multiply(Field factor);
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Field) {
+            return ((Field) obj).getValue() == this.getValue();
+        } else return false;
+    }
 }
