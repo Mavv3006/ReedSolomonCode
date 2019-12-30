@@ -1,6 +1,6 @@
 package Gleichungssystem;
 
-import Value.MyValue;
+import Value.RealNumbers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,32 +15,38 @@ class GLSTest {
 
     @BeforeEach
     void setUp() {
-        MyValue[][] myValueArray;
+        RealNumbers[][] myValueArray;
 
-        myValueArray = new MyValue[][]{
-                {new MyValue(4), new MyValue(2), new MyValue(5)},
-                {new MyValue(3), new MyValue(0), new MyValue(7)}
+        myValueArray = new RealNumbers[][]{
+                {new RealNumbers(4), new RealNumbers(2), new RealNumbers(5)},
+                {new RealNumbers(3), new RealNumbers(0), new RealNumbers(7)}
         };
         twoByTwo = new GLS(myValueArray);
 
-        myValueArray = new MyValue[][]{
-                {new MyValue(3), new MyValue(3), new MyValue(3), new MyValue(3)},
-                {new MyValue(4), new MyValue(4), new MyValue(4), new MyValue(4)},
-                {new MyValue(5), new MyValue(5), new MyValue(5), new MyValue(5)},
+        myValueArray = new RealNumbers[][]{
+                {new RealNumbers(3), new RealNumbers(3), new RealNumbers(3), new RealNumbers(3)},
+                {new RealNumbers(4), new RealNumbers(4), new RealNumbers(4), new RealNumbers(4)},
+                {new RealNumbers(5), new RealNumbers(5), new RealNumbers(5), new RealNumbers(5)},
         };
         threeByThree = new GLS(myValueArray);
     }
 
     @Test
     void upperTriangularMatrix() {
-        twoByTwo.upperTriangularMatrix(0);
-        assert twoByTwo.getGlsToSolve()[0][0].equals(MyValue.ONE) : true;
-        assert twoByTwo.getGlsToSolve()[1][1].equals(MyValue.ONE) : true;
+        try {
+            twoByTwo.setCurrentVariableIndex(0);
+            twoByTwo.upperTriangularMatrix();
+        } catch (UnsolvableGLSException e) {
+            e.printStackTrace();
+            fail();
+        }
+        assert twoByTwo.getGlsToSolve()[0][0].equals(RealNumbers.ONE) : true;
+        assert twoByTwo.getGlsToSolve()[1][1].equals(RealNumbers.ONE) : true;
     }
 
     @Test
     void checkGLS_lengthOfRow() {
-        assert twoByTwo.checkGLS_lengthOfRow() : true;
+        assert twoByTwo.allRowsHaveTheSameLength() : true;
     }
 
     @Test
@@ -62,11 +68,11 @@ class GLSTest {
 
     @Test
     void testOtherMatrixDimensions() {
-        MyValue[][] list = new MyValue[][]{
-                {new MyValue(1), new MyValue(1), new MyValue(7)},
-                {new MyValue(3), new MyValue(5), new MyValue(12)},
-                {new MyValue(9), new MyValue(15), new MyValue(36)},
-                {new MyValue(6), new MyValue(10), new MyValue(24)}
+        RealNumbers[][] list = new RealNumbers[][]{
+                {new RealNumbers(1), new RealNumbers(1), new RealNumbers(7)},
+                {new RealNumbers(3), new RealNumbers(5), new RealNumbers(12)},
+                {new RealNumbers(9), new RealNumbers(15), new RealNumbers(36)},
+                {new RealNumbers(6), new RealNumbers(10), new RealNumbers(24)}
         };
 
         GLS gls = new GLS(list);

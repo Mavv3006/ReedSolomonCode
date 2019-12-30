@@ -1,7 +1,7 @@
 package Gleichungssystem;
 
 import Value.Field;
-import Value.MyValue;
+import Value.RealNumbers;
 
 import java.util.Arrays;
 
@@ -10,11 +10,34 @@ public class GLS {
     private Field[][] glsToSolve;
     private Field[] result;
     private boolean isSolved;
+    private int currentVariableIndex = 0;
 
     public GLS(Field[][] glsToSolve) {
         this.glsToSolve = glsToSolve;
-        isCorrectGLS = checkGLS_lengthOfRow();
+        isCorrectGLS = allRowsHaveTheSameLength();
         isSolved = false;
+    }
+
+    void setCurrentVariableIndex(int currentVariableIndex) {
+        this.currentVariableIndex = currentVariableIndex;
+    }
+
+//    public static Field[] solve(Field[][] glsToSolve) throws UnsolvableGLSException, UnsolvedGLSException {
+//        GLS gls = new GLS(glsToSolve);
+//        gls.solve();
+//        return gls.getResult();
+//    }
+
+    Field[][] getGlsToSolve() {
+        return glsToSolve;
+    }
+
+    /**
+     * @throws UnsolvedGLSException Iff the GLS isn't solved
+     */
+    public Field[] getResult() throws UnsolvedGLSException {
+        if (isSolved) return result;
+        throw new UnsolvedGLSException();
     }
 
     @Override
@@ -58,7 +81,7 @@ public class GLS {
     private int nullRowCount() throws UnsolvableGLSException {
         int nullRowCounter = 0;
 
-        Field[] nullRow = new MyValue().getNullRow(this.columnCount());
+        Field[] nullRow = RealNumbers.ZERO.getNullRow(this.columnCount());
 
         for (int i = 0; i < rowCount(); i++) {
             if (Arrays.equals(glsToSolve[i], nullRow)) {
@@ -74,8 +97,7 @@ public class GLS {
      * @throws UnsolvableGLSException If the GLS does not have a solution
      */
     public void solve() throws UnsolvableGLSException {
-        int startIndex = 0;
-        upperTriangularMatrix(startIndex);
+        upperTriangularMatrix();
         resolveMatrix();
         if (result.length + nullRowCount() < rowCount()) {
             throw new UnsolvableGLSException();
@@ -84,72 +106,85 @@ public class GLS {
         }
     }
 
+    private Field[] getNullField(int lengthOfField) {
+        Field[] value = new Field[lengthOfField];
+        Arrays.setAll(value, v -> RealNumbers.ZERO);
+        return value;
+    }
+
     void resolveMatrix() throws UnsolvableGLSException {
         final int totalVariableAmount = totalVariableAmount();
-        result = new MyValue[totalVariableAmount];
-        Arrays.setAll(result, v -> new MyValue());
+        result = getNullField(totalVariableAmount);
         result[totalVariableAmount - 1] = glsToSolve[totalVariableAmount - 1][columnCount() - 1];
         resolveRecursively(totalVariableAmount - 1);
     }
 
     void resolveRecursively(int currentVariableIndex) throws UnsolvableGLSException {
         if (currentVariableIndex == 0) return;
-        Field recursiveValue = new MyValue();
+        Field recursiveValue = RealNumbers.ZERO;
         final int totalVariableAmount = this.totalVariableAmount();
         for (int i = 0; i < totalVariableAmount - currentVariableIndex; i++) {
-            Field nextVariableValue = result[currentVariableIndex + i].copy();
+            Value.Field nextVariableValue = result[currentVariableIndex + i].clone();
             nextVariableValue.multiply(glsToSolve[currentVariableIndex - 1][currentVariableIndex + i]);
             recursiveValue.add(nextVariableValue);
         }
-        Field nextValue = glsToSolve[currentVariableIndex - 1][columnCount() - 1].copy();
+        Value.Field nextValue = glsToSolve[currentVariableIndex - 1][columnCount() - 1].clone();
         nextValue.subtract(recursiveValue);
         result[currentVariableIndex - 1] = nextValue;
         resolveRecursively(currentVariableIndex - 1);
     }
 
-    void reduceFirstColumnToOne(int currentIndex) {
-        for (int i = currentIndex; i < glsToSolve.length; i++) {
-            Field[] activeRow = glsToSolve[i];
-            Field valueInTheFirstColumn = activeRow[currentIndex].copy();
-            if (valueInTheFirstColumn.equals(MyValue.ZERO) || valueInTheFirstColumn.equals(MyValue.ONE)) continue;
+    void upperTriangularMatrix() throws UnsolvableGLSException {
+        reduceFirstColumnToOne();
+        if (isValidVariableIndex()) {
+            glsToUppterTriangularMatrix();
+            currentVariableIndex++;
+            upperTriangularMatrix();
+        }
+    }
 
-            for (int columnCount = currentIndex; columnCount < activeRow.length; columnCount++) {
-                try {
-                    activeRow[columnCount].divide(valueInTheFirstColumn);
-                } catch (ArithmeticException ignored) {
-                }
+    private boolean isValidVariableIndex() throws UnsolvableGLSException {
+        return currentVariableIndex + 1 != rowCount() && currentVariableIndex + 1 != columnCount();
+    }
+
+    void reduceFirstColumnToOne() {
+        for (int currentRowIndex = currentVariableIndex; currentRowIndex < rowCount(); currentRowIndex++) {
+            divideRowByFirstValueOfTheRow(glsToSolve[currentRowIndex]);
+        }
+    }
+
+    private void divideRowByFirstValueOfTheRow(Field[] activeRow1) {
+        Field valueInTheFirstColumn = activeRow1[currentVariableIndex].clone();
+        if (isFirstValueOfRowZeroOrOne(valueInTheFirstColumn)) {
+            return;
+        }
+
+        for (int columnCount = currentVariableIndex; columnCount < activeRow1.length; columnCount++) {
+            try {
+                activeRow1[columnCount].divide(valueInTheFirstColumn);
+            } catch (ArithmeticException ignored) {
+                // will never happen
             }
         }
     }
 
-    Field[][] getGlsToSolve() {
-        return glsToSolve;
+    private boolean isFirstValueOfRowZeroOrOne(Field valueInTheFirstColumn) {
+        return valueInTheFirstColumn.equals(RealNumbers.ZERO) || valueInTheFirstColumn.equals(RealNumbers.ONE);
     }
 
-    void upperTriangularMatrix(int currentIndex) {
-        reduceFirstColumnToOne(currentIndex);
+    private void glsToUppterTriangularMatrix() {
+        for (int rowCount = currentVariableIndex + 1; rowCount < glsToSolve.length; rowCount++) {
+            subtractFirstRowFromOtherRow(glsToSolve[rowCount]);
+        }
+    }
 
-        if (currentIndex + 1 == glsToSolve.length || currentIndex + 1 == glsToSolve[0].length) return;
-
-        Field[] firstRow = glsToSolve[currentIndex];
-
-        for (int rowCount = currentIndex + 1; rowCount < glsToSolve.length; rowCount++) {
-            Field[] otherRow = glsToSolve[rowCount];
-            if (otherRow[currentIndex].equals(MyValue.ZERO)) continue;
-            for (int columnCount = currentIndex; columnCount < firstRow.length; columnCount++) {
+    private void subtractFirstRowFromOtherRow(Field[] otherRow) {
+        Field[] firstRow = glsToSolve[currentVariableIndex];
+        if (!otherRow[currentVariableIndex].equals(RealNumbers.ZERO)) {
+            for (int columnCount = currentVariableIndex; columnCount < firstRow.length; columnCount++) {
                 otherRow[columnCount].subtract(firstRow[columnCount]);
             }
         }
-
-        upperTriangularMatrix(currentIndex + 1);
-    }
-
-    /**
-     * @throws UnsolvedGLSException Iff the GLS isn't solved
-     */
-    public Field[] getResult() throws UnsolvedGLSException {
-        if (isSolved) return result;
-        throw new UnsolvedGLSException();
     }
 
     /**
@@ -157,15 +192,12 @@ public class GLS {
      *
      * @return {@code true} if all the rows have the same length
      */
-    boolean checkGLS_lengthOfRow() {
-        int lengthOfFirstRow = glsToSolve[0].length;
-        int columnIndex = 1;
-        do {
-            if (glsToSolve[columnIndex].length != lengthOfFirstRow) {
+    boolean allRowsHaveTheSameLength() {
+        for (int columnIndex = 1; columnIndex < rowCount(); columnIndex++) {
+            if (glsToSolve[columnIndex].length != glsToSolve[0].length) {
                 return false;
             }
-            columnIndex++;
-        } while (columnIndex < glsToSolve.length);
+        }
         return true;
     }
 }
